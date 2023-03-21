@@ -172,29 +172,6 @@ def three_ssim (original_images: tf.Tensor,
   
 	return ssim3
 
-def ssim_weighted_by_gradient ( original_images: tf.Tensor,
-                                degraded_images: tf.Tensor,
-                                max_val=255.0,
-                                max_grad = 2,
-								min_grad = 1,
-                                filter_size=11,
-                                filter_sigma=1.5,
-                                k1=0.01,
-                                k2=0.03,
-                                keep_padding = True):
-	"""
-	
-	"""
-	ssim_map = _ssim_map_per_channel(original_images, degraded_images, 
-									max_val, filter_size, filter_sigma, k1, k2, keep_padding)
-
-	img_grad = tf.image.sobel_edges(original_images)
-	imgs_magnitude_grad = tf.sqrt( tf.square(img_grad[:,:,:,:, 0]) + tf.square(img_grad[:,:,:,:, 1]))
-
-	if not keep_padding: # make the magnitude gradient have the same dimensions of the ssim_map
-		size_decrease = (filter_size - 1)//2
-		imgs_magnitude_grad = imgs_magnitude_grad[:, size_decrease:-size_decrease, size_decrease:-size_decrease]
-	pass
 
 
 def blocking_efect_factor (im: tf.Tensor, block_size = 8) -> tf.Tensor:
