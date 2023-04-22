@@ -122,7 +122,7 @@ def get_weight_map (magnitude_gradient: tf.Tensor,
 	weight_map = tf.where(normalized_magnitude_gradient < threshold_for_textures,
 		       			   tf.constant(weight_for_smooth, dtype = magnitude_gradient.dtype),
 						  weight_map)
-
+	
 
 	return weight_map
 
@@ -130,7 +130,7 @@ def get_weight_map (magnitude_gradient: tf.Tensor,
 def three_ssim (original_images: tf.Tensor,
                 degraded_images: tf.Tensor,
                 max_val=255.0,
-                weight_for_edges = 2,
+                weight_for_edges = 3,
                 weight_for_texture = 1,
                 weight_for_smooth = 1,
 				threshold_for_edges = 0.12,
@@ -170,6 +170,7 @@ def three_ssim (original_images: tf.Tensor,
 	weighted_ssim_sum = tf.reduce_sum(tf.multiply(ssim_map, weight_map), axis = (-1,-2,-3))
 	ssim3: tf.Tensor = weighted_ssim_sum/tf.reduce_sum(weight_map, axis = (-1, -2, -3))
   
+
 	return ssim3
 
 
