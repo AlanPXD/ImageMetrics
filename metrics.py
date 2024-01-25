@@ -7,6 +7,8 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn
 from tensorflow.python.ops.image_ops_impl import _ssim_helper, _fspecial_gauss
 from math import log
+from tensorflow.keras.metrics import Metric	
+from tensorflow._api.v2.image import ssim
 import tensorflow as tf
 import numpy as np
 
@@ -228,11 +230,11 @@ def blocking_efect_factor (im: tf.Tensor, block_size = 8) -> tf.Tensor:
 	# BEF
 	bef = t*(d_b - d_bc)
 
-	return tf.math.maximum(bef, tf.zeros(bef.shape, dtype = bef.dtype))
+	return tf.nn.relu(bef)
 
 
 
-def psnrb (target_imgs: tf.Tensor, degraded_imgs: tf.Tensor, ) -> tf.float32:
+def psnrb (target_imgs: tf.Tensor, degraded_imgs: tf.Tensor, ) -> tf.Tensor:
 	"""
 	Computes the PSNR-B for a batch of images
 
@@ -253,6 +255,117 @@ def psnrb (target_imgs: tf.Tensor, degraded_imgs: tf.Tensor, ) -> tf.float32:
 	psnr_b =  tf.math.add(-10*tf.math.log(bef_total + img_mse)/log(10), 10*log(255**2, 10))
 
 	return psnr_b
+
+class PSNRB (Metric):
+    
+	def __init__(
+    self,
+    name='psnrb',
+    **kwargs):
+		super().__init__(name=name, **kwargs)
+	
+
+	def update_state(self, y_true, y_pred, sample_weight=None):
+		self.result = psnrb(y_true, y_pred)
+
+	def result(self):
+		return self.result
+
+	def __call__(self, y_true, y_pred, sample_weight=None):
+		return psnrb(y_true, y_pred)
+
+
+class SSIM (Metric):
+    
+	def __init__(
+		self,
+		name='ssim',
+		max_val = 1,
+		filter_size: int = 11,
+		filter_sigma: float = 1.5,
+		k1: float = 0.01,
+		k2: float = 0.03,
+    **kwargs):
+		
+		super().__init__(name=name, **kwargs)
+		self.max_val = max_val
+		self.filter_size = filter_size
+		self.filter_sigma = filter_sigma
+		self.k1 = k1
+		self.k2 = k2
+		
+	def update_state(self, y_true, y_pred, sample_weight=None):
+		self.result = ssim(y_true, y_pred, self.max_val,
+                        self.filter_size,
+                        self.filter_sigma,
+                        self.k1,
+                        self.k2)
+
+	def result(self):
+		return self.result
+
+	def __call__(self, y_true, y_pred, sample_weight=None):
+		return ssim(y_true, y_pred, self.max_val,
+						self.filter_size,
+						self.filter_sigma,
+						self.k1,
+						self.k2)
+
+class SSIM3 (Metric):
+    
+	def __init__(
+		self,
+		name='3ssim',
+		max_val = 1,
+  		weight_for_edges: int = 3,
+        weight_for_texture: int = 1,
+        weight_for_smooth: int = 1,
+        threshold_for_edges: float = 0.12,
+        threshold_for_textures: float = 0.06,
+		filter_size: int = 11,
+		filter_sigma: float = 1.5,
+		k1: float = 0.01,
+		k2: float = 0.03,
+    **kwargs):
+		
+		super().__init__(name=name, **kwargs)
+		self.max_val = max_val
+		self.weight_for_edges: int = weight_for_edges,
+		self.weight_for_texture: int = weight_for_texture,
+		self.weight_for_smooth: int = weight_for_smooth,
+		self.threshold_for_edges: float = threshold_for_edges,
+		self.threshold_for_textures: float = threshold_for_textures,
+		self.filter_size = filter_size
+		self.filter_sigma = filter_sigma
+		self.k1 = k1
+		self.k2 = k2
+		
+	def update_state(self, y_true, y_pred, sample_weight=None):
+		self.result = three_ssim(y_true, y_pred, self.max_val,
+                        self.weight_for_edges,
+                        self.weight_for_texture,
+                        self.weight_for_smooth,
+                        self.threshold_for_edges,
+                        self.threshold_for_textures,
+                        self.filter_size,
+                        self.filter_sigma,
+                        self.k1,
+                        self.k2)
+
+	def result(self):
+		return self.result
+
+	def __call__(self, y_true, y_pred, sample_weight=None):
+		return three_ssim(y_true, y_pred, self.max_val,
+                        self.weight_for_edges,
+                        self.weight_for_texture,
+                        self.weight_for_smooth,
+                        self.threshold_for_edges,
+                        self.threshold_for_textures,
+                        self.filter_size,
+                        self.filter_sigma,
+                        self.k1,
+                        self.k2)
 
 if __name__ == "__main__":
 	
