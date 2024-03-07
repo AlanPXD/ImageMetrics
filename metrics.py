@@ -256,53 +256,35 @@ def psnrb (target_imgs: tf.Tensor, degraded_imgs: tf.Tensor, ) -> tf.Tensor:
 
 	return psnr_b
 
-class PSNRB (Metric):
+class PSNRB ():
     
 	def __init__(
     self,
-    name='psnrb',
+    name='PSNRB',
     **kwargs):
-		super().__init__(name=name, **kwargs)
-	
-
-	def update_state(self, y_true, y_pred, sample_weight=None):
-		self.result = psnrb(y_true, y_pred)
-
-	def result(self):
-		return self.result
+		self.__name__ = name
 
 	def __call__(self, y_true, y_pred, sample_weight=None):
 		return psnrb(y_true, y_pred)
 
 
-class SSIM (Metric):
+class SSIM ():
     
 	def __init__(
 		self,
-		name='ssim',
+		name='SSIM',
 		max_val = 1,
 		filter_size: int = 11,
 		filter_sigma: float = 1.5,
 		k1: float = 0.01,
 		k2: float = 0.03,
     **kwargs):
-		
-		super().__init__(name=name, **kwargs)
 		self.max_val = max_val
 		self.filter_size = filter_size
 		self.filter_sigma = filter_sigma
 		self.k1 = k1
 		self.k2 = k2
-		
-	def update_state(self, y_true, y_pred, sample_weight=None):
-		self.result = ssim(y_true, y_pred, self.max_val,
-                        self.filter_size,
-                        self.filter_sigma,
-                        self.k1,
-                        self.k2)
-
-	def result(self):
-		return self.result
+		self.__name__ = name
 
 	def __call__(self, y_true, y_pred, sample_weight=None):
 		return ssim(y_true, y_pred, self.max_val,
@@ -310,12 +292,14 @@ class SSIM (Metric):
 						self.filter_sigma,
 						self.k1,
 						self.k2)
+	
+	
 
-class SSIM3 (Metric):
+class SSIM3 ():
     
 	def __init__(
 		self,
-		name='3ssim',
+		name='SSIM3',
 		max_val = 1,
   		weight_for_edges: int = 3,
         weight_for_texture: int = 1,
@@ -339,21 +323,7 @@ class SSIM3 (Metric):
 		self.filter_sigma = filter_sigma
 		self.k1 = k1
 		self.k2 = k2
-		
-	def update_state(self, y_true, y_pred, sample_weight=None):
-		self.result = three_ssim(y_true, y_pred, self.max_val,
-                        self.weight_for_edges,
-                        self.weight_for_texture,
-                        self.weight_for_smooth,
-                        self.threshold_for_edges,
-                        self.threshold_for_textures,
-                        self.filter_size,
-                        self.filter_sigma,
-                        self.k1,
-                        self.k2)
-
-	def result(self):
-		return self.result
+		self.__name__ = name
 
 	def __call__(self, y_true, y_pred, sample_weight=None):
 		return three_ssim(y_true, y_pred, self.max_val,
@@ -366,15 +336,3 @@ class SSIM3 (Metric):
                         self.filter_sigma,
                         self.k1,
                         self.k2)
-
-if __name__ == "__main__":
-	
-	from os import environ
-	environ["CUDA_VISIBLE_DEVICES"]="2"
-	
-	img1_np = 4* np.ones(shape=(2,12,12,1))#np.random.normal(127, 25, size = (2,64,64,1))
-	img2_np = 4 * np.ones(shape=(2,12,12,1))#np.random.normal(127, 35/3, size = (2,64,64,1))
-	img1 = tf.constant(img1_np, dtype="float64")
-	img2 = tf.constant(img2_np, dtype="float64")
-
-	print(three_ssim(img1, img2, 255, weight_for_edges=2., weight_for_smooth= 1., weight_for_texture = 1., keep_padding=False))
